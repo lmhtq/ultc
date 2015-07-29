@@ -152,6 +152,9 @@ struct tcp_send_vars
 #endif
 };
 
+#define STREAM_DEFAULT 0     /* default stream */
+#define STREAM_REDUNDANCY 1  /* redundanct encoded stream */
+
 typedef struct tcp_stream
 {
 	socket_map_t socket;
@@ -190,6 +193,7 @@ typedef struct tcp_stream
 	
 	uint32_t last_active_ts;		/* ts_last_ack_sent or ts_last_ts_upd */
 
+	uint8_t stream_type; /* lmhtq: which type the tcp stream is */
 } tcp_stream;
 
 inline char *
@@ -216,6 +220,10 @@ RaiseCloseEvent(mtcp_manager_t mtcp, tcp_stream *stream);
 
 inline void 
 RaiseErrorEvent(mtcp_manager_t mtcp, tcp_stream *stream);
+
+tcp_stream *
+CreateTCPStreamWithType(mtcp_manager_t mtcp, socket_map_t socket, int type, 
+		uint32_t saddr, uint16_t sport, uint32_t daddr, uint16_t dport, uint8_t stream_type);
 
 tcp_stream *
 CreateTCPStream(mtcp_manager_t mtcp, socket_map_t socket, int type, 

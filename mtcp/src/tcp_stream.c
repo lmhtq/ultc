@@ -325,6 +325,148 @@ CreateTCPStream(mtcp_manager_t mtcp, socket_map_t socket, int type,
 	return stream;
 }
 /*---------------------------------------------------------------------------*/
+/*----------------lmhtq------------------------------------------------------*/
+tcp_stream *
+CreateTCPStreamWithType(mtcp_manager_t mtcp, socket_map_t socket, int type, 
+		uint32_t saddr, uint16_t sport, uint32_t daddr, uint16_t dport, uint8_t stream_type)
+{
+	tcp_stream *stream = NULL;
+	int ret;
+
+	uint8_t *sa;
+	uint8_t *da;
+	
+	pthread_mutex_lock(&mtcp->ctx->flow_pool_lock);
+
+	stream = (tcp_stream *)MPAllocateChunk(mtcp->flow_pool);
+	if (!stream) {
+		TRACE_ERROR("Cannot allocate memory for the stream. "
+				"CONFIG.max_concurrency: %d, concurrent: %u\n", 
+				CONFIG.max_concurrency, mtcp->flow_cnt);
+		pthread_mutex_unlock(&mtcp->ctx->flow_pool_lock);
+		return NULL;
+	}
+	memset(stream, 0, sizeof(tcp_stream));
+
+	stream->rcvvar = (struct tcp_recv_vars *)MPAllocateChunk(mtcp->rv_pool);
+	if (!stream->rcvvar) {
+		MPFreeChunk(mtcp->flow_pool, stream);
+		pthread_mutex_unlock(&mtcp->ctx->flow_pool_lock);
+		return NULL;
+	}
+	stream->sndvar = (struct tcp_send_vars *)MPAllocateChunk(mtcp->sv_pool);
+	if (!stream->sndvar) {
+		MPFreeChunk(mtcp->rv_pool, stream->rcvvar);
+		MPFreeChunk(mtcp->flow_pool, stream);
+		pthread_mutex_unlock(&mtcp->ctx->flow_pool_lock);
+		return NULL;
+	}
+	memset(stream->rcvvar, 0, sizeof(struct tcp_recv_vars));
+	memset(stream->sndvar, 0, sizeof(struct tcp_send_vars));
+
+	stream->id = mtcp->g_id++;
+	stream->saddr = saddr;
+	stream->sport = sport;
+	stream->daddr = daddr;
+	stream->dport = dport;
+
+	/* lmhtq: set the stream's type */
+	stream->stream_type = stream_type;
+
+	ret = HTInsert(mtcp->tcp_flow_table, stream);
+	if (ret < 0) {
+		TRACE_ERROR("Stream %d: "
+				"Failed to insert the stream into hash table.\n", stream->id);
+		MPFreeChunk(mtcp->flow_pool, stream);
+		pthread_mutex_unlock(&mtcp->ctx->flow_pool_lock);
+		return NULL;
+	}
+	stream->on_hash_table = TRUE;
+	mtcp->flow_cnt++;
+
+	pthread_mutex_unlock(&mtcp->ctx->flow_pool_lock);
+
+	if (socket) {
+		stream->socket = socket;
+		socket->stream = stream;
+	}
+
+	stream->stream_type = type;
+	stream->state = TCP_ST_LISTEN;
+
+	stream->on_rto_idx = -1;
+	
+	stream->sndvar->ip_id = 0;
+	stream->sndvar->mss = TCP_DEFAULT_MSS;
+	stream->sndvar->wscale = TCP_DEFAULT_WSCALE;
+	stream->sndvar->nif_out = GetOutputInterface(stream->daddr);
+
+	stream->sndvar->iss = rand() % TCP_MAX_SEQ;
+	//stream->sndvar->iss = 0;
+	stream->rcvvar->irs = 0;
+
+	stream->snd_nxt = stream->sndvar->iss;
+	stream->sndvar->snd_una = stream->sndvar->iss;
+	stream->sndvar->snd_wnd = CONFIG.sndbuf_size;
+	stream->rcv_nxt = 0;
+	stream->rcvvar->rcv_wnd = TCP_INITIAL_WINDOW;
+
+	stream->rcvvar->snd_wl1 = stream->rcvvar->irs - 1;
+
+	stream->sndvar->rto = TCP_INITIAL_RTO;
+
+#if BLOCKING_SUPPORT
+	if (pthread_cond_init(&stream->rcvvar->read_cond, NULL)) {
+		perror("pthread_cond_init of read_cond");
+		return NULL;
+	}
+	if (pthread_cond_init(&stream->sndvar->write_cond, NULL)) {
+		perror("pthread_cond_init of write_cond");
+		return NULL;
+	}
+#endif
+
+#if USE_SPIN_LOCK
+	if (pthread_spin_init(&stream->rcvvar->read_lock, PTHREAD_PROCESS_PRIVATE)) {
+#else
+	if (pthread_mutex_init(&stream->rcvvar->read_lock, NULL)) {
+#endif
+		perror("pthread_mutex_init of read_lock");
+#if BLOCKING_SUPPORT
+		pthread_cond_destroy(&stream->rcvvar->read_cond);
+		pthread_cond_destroy(&stream->sndvar->write_cond);
+#endif
+		return NULL;
+	}
+#if USE_SPIN_LOCK
+	if (pthread_spin_init(&stream->sndvar->write_lock, PTHREAD_PROCESS_PRIVATE)) {
+		perror("pthread_spin_init of write_lock");
+		pthread_spin_destroy(&stream->rcvvar->read_lock);
+#else
+	if (pthread_mutex_init(&stream->sndvar->write_lock, NULL)) {
+		perror("pthread_mutex_init of write_lock");
+		pthread_mutex_destroy(&stream->rcvvar->read_lock);
+#endif
+#if BLOCKING_SUPPORT
+		pthread_cond_destroy(&stream->rcvvar->read_cond);
+		pthread_cond_destroy(&stream->sndvar->write_cond);
+#endif
+		return NULL;
+	}
+
+	sa = (uint8_t *)&stream->saddr;
+	da = (uint8_t *)&stream->daddr;
+	TRACE_STREAM("CREATED NEW TCP STREAM %d: "
+			"%u.%u.%u.%u(%d) -> %u.%u.%u.%u(%d) (ISS: %u)\n", stream->id, 
+			sa[0], sa[1], sa[2], sa[3], ntohs(stream->sport), 
+			da[0], da[1], da[2], da[3], ntohs(stream->dport), 
+			stream->sndvar->iss);
+
+	UNUSED(da);
+	UNUSED(sa);
+	return stream;
+}
+/*---------------------------------------------------------------------------*/
 void
 DestroyTCPStream(mtcp_manager_t mtcp, tcp_stream *stream)
 {
