@@ -17,6 +17,7 @@
 #include "rss.h"
 #include "config.h"
 #include "debug.h"
+#include "redundancy.h" /* lmhtq: for redundant stream*/
 
 #define MAX(a, b) ((a)>(b)?(a):(b))
 #define MIN(a, b) ((a)<(b)?(a):(b))
@@ -1220,6 +1221,11 @@ CopyFromUser(mtcp_manager_t mtcp, tcp_stream *cur_stream, char *buf, int len)
 	int sndlen;
 	int ret;
 
+	/* lmhtq: for redundant coded stream */
+	int encoded_unit_num;
+	int encoded_len;
+	uint8_t *encoded_buf;
+
 	sndlen = MIN((int)sndvar->snd_wnd, len);
 	if (sndlen <= 0) {
 		errno = EAGAIN;
@@ -1237,7 +1243,24 @@ CopyFromUser(mtcp_manager_t mtcp, tcp_stream *cur_stream, char *buf, int len)
 		}
 	}
 
-	ret = SBPut(mtcp->rbm_snd, sndvar->sndbuf, buf, sndlen);
+	/* lmhtq: for redundant coded stream */
+	switch (cur_stream->stream_type) {
+		case METHOD_REDUNDANCY:
+			encoded_unit_num = GetEncodedUnitNum(sndlen);
+			encoded_len = encoded_unit_num / REDUNDANCY_SIZE * (REDUNDANCY_SIZE + 1) * PKT_SIZE; 
+			encoded_buf = GetEncodedData(buf, sndlen, encoded_unit_num);
+			ret = SBPut(mtcp->rbm_snd, sndvar->sndbuf, encoded_buf, encoded_len);
+			FreeEncodedData(encoded_buf);
+			break;
+		case METHOD_DEFAULT:
+			ret = SBPut(mtcp->rbm_snd, sndvar->sndbuf, buf, sndlen);
+			break;
+		default: 
+			ret = SBPut(mtcp->rbm_snd, sndvar->sndbuf, buf, sndlen);
+			break;
+	}
+
+	/*ret = SBPut(mtcp->rbm_snd, sndvar->sndbuf, buf, sndlen);*/
 	assert(ret == sndlen);
 	sndvar->snd_wnd = sndvar->sndbuf->size - sndvar->sndbuf->len;
 	if (ret <= 0) {

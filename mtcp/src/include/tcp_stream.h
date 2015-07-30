@@ -152,8 +152,8 @@ struct tcp_send_vars
 #endif
 };
 
-#define STREAM_DEFAULT 0     /* default stream */
-#define STREAM_REDUNDANCY 1  /* redundanct encoded stream */
+#define METHOD_DEFAULT 0     /* default stream */
+#define METHOD_REDUNDANCY 1  /* redundanct encoded stream */
 
 typedef struct tcp_stream
 {
@@ -193,7 +193,7 @@ typedef struct tcp_stream
 	
 	uint32_t last_active_ts;		/* ts_last_ack_sent or ts_last_ts_upd */
 
-	uint8_t stream_type; /* lmhtq: which type the tcp stream is */
+	uint8_t stream_method;          /* lmhtq: which method the tcp stream uses */
 } tcp_stream;
 
 inline char *
@@ -222,8 +222,8 @@ inline void
 RaiseErrorEvent(mtcp_manager_t mtcp, tcp_stream *stream);
 
 tcp_stream *
-CreateTCPStreamWithType(mtcp_manager_t mtcp, socket_map_t socket, int type, 
-		uint32_t saddr, uint16_t sport, uint32_t daddr, uint16_t dport, uint8_t stream_type);
+CreateTCPStreamWithMethod(mtcp_manager_t mtcp, socket_map_t socket, int type, 
+		uint32_t saddr, uint16_t sport, uint32_t daddr, uint16_t dport, uint8_t stream_method);
 
 tcp_stream *
 CreateTCPStream(mtcp_manager_t mtcp, socket_map_t socket, int type, 

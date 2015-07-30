@@ -40,11 +40,11 @@ PS_DIR=../../io_engine
 INC += -I$(PS_DIR)/include
 
 # DPDK LIBRARY and HEADER
-DPDK_INC=/home/bc/mtcp//dpdk/include
-DPDK_LIB=/home/bc/mtcp//dpdk/lib/
+DPDK_INC=/home/bc/mtcp/dpdk/include
+DPDK_LIB=/home/bc/mtcp/dpdk/lib/
 # CFLAGS for DPDK-related compilation
 ifeq ($(DPDK), 1)
-DPDK_MACHINE_FLAGS = $(shell cat /home/bc/mtcp//dpdk/include/cflags.txt)
+DPDK_MACHINE_FLAGS = $(shell cat /home/bc/mtcp/dpdk/include/cflags.txt)
 INC += ${DPDK_MACHINE_FLAGS} -I${DPDK_INC} -include $(DPDK_INC)/rte_config.h
 else
 INC += -DDISABLE_DPDK

@@ -8,12 +8,18 @@
 #define REDUNDANCY_SIZE 3
 /***********************************************************************/
 size_t 
-GetEncodedLength(size_t len);
+GetEncodedUnitNum(size_t len);
 
 uint8_t*
 GetEncodedData(uint8_t *src, size_t len, uint32_t unit_num);
 
 uint8_t
 FreeEncodedData(uint8_t *encoded);
+
+uint8_t
+GetLostIndex()
+
+uint8_t*
+GetDecodedData(uint8_*src, size_t len, uint32_t unit_num);
 
 #endif /* __REDUNDANCY_H_ */

@@ -327,8 +327,8 @@ CreateTCPStream(mtcp_manager_t mtcp, socket_map_t socket, int type,
 /*---------------------------------------------------------------------------*/
 /*----------------lmhtq------------------------------------------------------*/
 tcp_stream *
-CreateTCPStreamWithType(mtcp_manager_t mtcp, socket_map_t socket, int type, 
-		uint32_t saddr, uint16_t sport, uint32_t daddr, uint16_t dport, uint8_t stream_type)
+CreateTCPStreamWithMethod(mtcp_manager_t mtcp, socket_map_t socket, int type, 
+		uint32_t saddr, uint16_t sport, uint32_t daddr, uint16_t dport, uint8_t stream_method)
 {
 	tcp_stream *stream = NULL;
 	int ret;
@@ -370,8 +370,8 @@ CreateTCPStreamWithType(mtcp_manager_t mtcp, socket_map_t socket, int type,
 	stream->daddr = daddr;
 	stream->dport = dport;
 
-	/* lmhtq: set the stream's type */
-	stream->stream_type = stream_type;
+	/* lmhtq: set the stream's method, METHOD_REDUNDANCY or METHOD_DEFAULT... */
+	stream->stream_method = stream_method;
 
 	ret = HTInsert(mtcp->tcp_flow_table, stream);
 	if (ret < 0) {

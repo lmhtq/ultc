@@ -4,13 +4,15 @@
 #include <string.h>
 #include <stdlib.h>
 
+#inlcude "redundancy.h"
+
 #define PKT_SIZE 256
 #define REDUNDANCY_SIZE 3
 /***********************************************************************/
 size_t 
-GetEncodedLength(size_t len)
+GetEncodedUnitNum(size_t len)
 {
-	uint32_t unit_num = len / PKT_SIZE;
+	int unit_num = len / PKT_SIZE;
 	if (len % PKT_SIZE) {
 		unit_num++;
 	}
