@@ -26,8 +26,8 @@ GetEncodedUnitNum(size_t len)
 uint8_t*
 GetEncodedData(uint8_t *src, size_t len, uint32_t unit_num)
 {
-	uint8_t *src_fill = (uint8_t*)malloc(sizeof(uint8_t) * (REDUNDANCY_SIZE) * PKT_SIZE);
-	uint8_t *data = (uint8_t*)malloc(sizeof(uint8_t) * (REDUNDANCY_SIZE + 1) * PKT_SIZE);
+	uint8_t *src_fill = (uint8_t*)malloc(sizeof(uint8_t) * unit_num * PKT_SIZE);
+	uint8_t *data = (uint8_t*)malloc(sizeof(uint8_t) * unit_num / REDUNDANCY_SIZE * (REDUNDANCY_SIZE + 1) * PKT_SIZE);
 	uint8_t *src_ptr[REDUNDANCY_SIZE];
 	uint8_t *redundant_ptr;
 	uint8_t cnt = unit_num / 3;
@@ -58,9 +58,9 @@ GetEncodedData(uint8_t *src, size_t len, uint32_t unit_num)
 		/* compute redundancy */
 		offset += PKT_SIZE;
 		for (k = 1; k < REDUNDANCY_SIZE; k++) {
-			for (m = 0; m < PKT_SIZE; m++) [
+			for (m = 0; m < PKT_SIZE; m++) {
 				*(data + offset_encoded + m) ^= *(src_fill + offset + m);
-			]
+			}
 			offset += PKT_SIZE;
 		}
 	}
