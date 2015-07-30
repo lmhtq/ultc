@@ -8,6 +8,8 @@
 #include "timer.h"
 #include "debug.h"
 
+#include "redundancy.h"  /* lmhtq: for redundant stream */
+
 #define TCP_CALCULATE_CHECKSUM      TRUE
 #define ACK_PIGGYBACK				TRUE
 #define TRY_SEND_BEFORE_QUEUE		FALSE
@@ -382,6 +384,17 @@ FlushTCPSendingBuffer(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_
 
 		data = sndvar->sndbuf->head + 
 				(seq - sndvar->sndbuf->head_seq);
+
+		/* lmhtq: used for redundant stream */
+		switch (cur_stream->stream_method)
+		{
+			case STREAM_REDUNDANCY:
+				maxlen = PKT_SIZE;
+			case STREAM_DEFAULT:
+				break;
+			default:
+				break;
+		}
 
 		if (buffered_len > maxlen) {
 			len = maxlen;

@@ -4,7 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#inlcude "redundancy.h"
+#include "tcp_stream.h"
+#include "redundancy.h"
 
 #define PKT_SIZE 256
 #define REDUNDANCY_SIZE 3
@@ -59,7 +60,7 @@ GetEncodedData(uint8_t *src, size_t len, uint32_t unit_num)
 		offset += PKT_SIZE;
 		for (k = 1; k < REDUNDANCY_SIZE; k++) {
 			for (m = 0; m < PKT_SIZE; m++) {
-				*(data + offset_encoded + m) ^= *(src_fill + offset + m);
+				*(data rrrrirr+ offset_encoded + m) ^= *(src_fill + offset + m);
 			}
 			offset += PKT_SIZE;
 		}
@@ -74,6 +75,11 @@ FreeEncodedData(uint8_t *encoded)
 		perror("FreeEnodedData");
 	}
 	return 0;
+}
+
+void
+AddToDecodedData(tcp_stream *cur_stream, uint8_t *payload, uint32_t seq, int payloadlen)
+{
 }
 
 #endif /* __REDUNDANCY_H_ */

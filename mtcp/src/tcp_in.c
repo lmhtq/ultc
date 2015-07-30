@@ -843,12 +843,13 @@ Handle_TCP_ST_ESTABLISHED (mtcp_manager_t mtcp, uint32_t cur_ts,
 		TRACE_DBG("Stream %d (TCP_ST_ESTABLISHED): weird SYN. "
 				"seq: %u, expected: %u, ack_seq: %u, expected: %u\n", 
 				cur_stream->id, seq, cur_stream->rcv_nxt, 
-				ack_seq, cur_stream->snd_nxt);
+				ack_seq, cur_strea m->snd_nxt);
 		cur_stream->snd_nxt = ack_seq;
 		AddtoControlList(mtcp, cur_stream, cur_ts);
 		return;
 	}
 
+	
 	if (payloadlen > 0) {
 		if (ProcessTCPPayload(mtcp, cur_stream, 
 				cur_ts, payload, seq, payloadlen)) {
@@ -858,6 +859,7 @@ Handle_TCP_ST_ESTABLISHED (mtcp_manager_t mtcp, uint32_t cur_ts,
 			EnqueueACK(mtcp, cur_stream, cur_ts, ACK_OPT_NOW);
 		}
 	}
+	
 	
 	if (tcph->ack) {
 		if (cur_stream->sndvar->sndbuf) {
@@ -892,7 +894,7 @@ Handle_TCP_ST_CLOSE_WAIT (mtcp_manager_t mtcp, uint32_t cur_ts,
 	if (TCP_SEQ_LT(seq, cur_stream->rcv_nxt)) {
 		TRACE_DBG("Stream %d (TCP_ST_CLOSE_WAIT): "
 				"weird seq: %u, expected: %u\n", 
-				cur_stream->id, seq, cur_stream->rcv_nxt);
+	 			cur_stream->id, seq, cur_stream->rcv_nxt);
 		AddtoControlList(mtcp, cur_stream, cur_ts);
 		return;
 	}
@@ -912,7 +914,7 @@ Handle_TCP_ST_LAST_ACK (mtcp_manager_t mtcp, uint32_t cur_ts, const struct iphdr
 	if (TCP_SEQ_LT(seq, cur_stream->rcv_nxt)) {
 		TRACE_DBG("Stream %d (TCP_ST_LAST_ACK): "
 				"weird seq: %u, expected: %u\n", 
-				cur_stream->id, seq, cur_stream->rcv_nxt);
+	 			cur_stream->id, seq, cur_stream->rcv_nxt);
 		return;
 	}
 
@@ -948,7 +950,7 @@ Handle_TCP_ST_LAST_ACK (mtcp_manager_t mtcp, uint32_t cur_ts, const struct iphdr
 			DestroyTCPStream(mtcp, cur_stream);
 		} else {
 			TRACE_DBG("Stream %d (TCP_ST_LAST_ACK): Not ACK of FIN. "
-					"ack_seq: %u, expected: %u\n", 
+	 				"ack_seq: %u, expected: %u\n", 
 					cur_stream->id, ack_seq, cur_stream->sndvar->fss + 1);
 			//cur_stream->snd_nxt = cur_stream->sndvar->fss;
 			AddtoControlList(mtcp, cur_stream, cur_ts);
@@ -969,7 +971,7 @@ Handle_TCP_ST_FIN_WAIT_1 (mtcp_manager_t mtcp, uint32_t cur_ts,
 
 	if (TCP_SEQ_LT(seq, cur_stream->rcv_nxt)) {
 		TRACE_DBG("Stream %d (TCP_ST_LAST_ACK): "
-				"weird seq: %u, expected: %u\n", 
+	 			"weird seq: %u, expected: %u\n", 
 				cur_stream->id, seq, cur_stream->rcv_nxt);
 		AddtoControlList(mtcp, cur_stream, cur_ts);
 		return;
@@ -985,7 +987,7 @@ Handle_TCP_ST_FIN_WAIT_1 (mtcp_manager_t mtcp, uint32_t cur_ts,
 				ack_seq == cur_stream->sndvar->fss + 1) {
 			cur_stream->sndvar->snd_una = ack_seq;
 			if (TCP_SEQ_GT(ack_seq, cur_stream->snd_nxt)) {
-				TRACE_DBG("Stream %d: update snd_nxt to %u\n", 
+	 			TRACE_DBG("Stream %d: update snd_nxt to %u\n", 
 						cur_stream->id, ack_seq);
 				cur_stream->snd_nxt = ack_seq;
 			}
@@ -1108,8 +1110,8 @@ Handle_TCP_ST_CLOSING (mtcp_manager_t mtcp, uint32_t cur_ts,
 			CTRACE_ERROR("Stream %d (TCP_ST_CLOSING): Not ACK of FIN. "
 					"ack_seq: %u, snd_nxt: %u, snd_una: %u, fss: %u\n", 
 					cur_stream->id, ack_seq, cur_stream->snd_nxt, 
-					cur_stream->sndvar->snd_una, cur_stream->sndvar->fss);
-			DumpIPPacketToFile(stderr, iph, ip_len);
+	 				cur_stream->sndvar->snd_una, cur_stream->sndvar->fss);
+	 		DumpIPPacketToFile(stderr, iph, ip_len);
 			DumpStream(mtcp, cur_stream);
 #endif
 			//assert(0);
