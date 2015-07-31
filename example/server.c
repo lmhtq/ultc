@@ -76,6 +76,11 @@ int server()
 	int s_len;
 	char s_buf[SNDBUF_SIZE+2];
 
+	int core_nums;
+
+	printf("client start...\n");
+	core_nums = GetNumCPUs();
+
 	ret = mtcp_init("server.conf");
 	if (ret) {
 		printf("Failed to initialize mtcp.\n");

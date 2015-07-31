@@ -1,4 +1,4 @@
-TARGETS = epserver epwget
+TARGETS = server client
 CC = gcc -g -O3
 DPDK=1
 PS=0
