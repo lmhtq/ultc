@@ -25,7 +25,7 @@
 
 #define MAX_FLOW_NUM  (10000)
 
-#define RCVBUF_SIZE (3*256)
+#define RCVBUF_SIZE (5*256)
 #define SNDBUF_SIZE (2*256)
 
 #define MAX_EVENTS (MAX_FLOW_NUM * 3)
@@ -52,6 +52,8 @@
 
 #define IP_RANGE 1
 #define MAX_IP_STR_LEN 16
+
+#define _DEBUG_
 
 const int core = 1;
 const short s_port = 81;
@@ -140,6 +142,7 @@ int server()
 				mtcp_epoll_ctl(mctx, ep_id, MTCP_EPOLL_CTL_ADD, c, &ev);
 			}
 			else if (events[i].events & MTCP_EPOLLIN) {
+				memset(r_buf, 0, RCVBUF_SIZE);
 				r_len = mtcp_read(mctx, sockid, r_buf, RCVBUF_SIZE);
 #ifdef _DEBUG_
 				printf("lmhtq: read %dB\n%s\n", r_len, r_buf);
@@ -152,7 +155,7 @@ int server()
 					mtcp_close(mctx, sockid);
 				} 
 			} else if (events[i].events & MTCP_EPOLLOUT) {
-				s_len = mtcp_write(mctx, sockid, s_buf, RCVBUF_SIZE);
+				s_len = mtcp_write(mctx, sockid, s_buf, SNDBUF_SIZE);
 #ifdef _DEBUG_
 				printf("lmhtq: write %dB\n", s_len);
 #endif
@@ -244,6 +247,7 @@ int client()
 		for (i = 0; i < n; i++) {
 			sockid = events[i].data.sockid;
 			if (events[i].events & MTCP_EPOLLIN) {
+				memset(r_buf, 0, RCVBUF_SIZE);
 				r_len = mtcp_read(mctx, sockid, r_buf, RCVBUF_SIZE);
 #ifdef _DEBUG_
 				printf("lmhtq: read %dB\n", r_len);
@@ -256,7 +260,7 @@ int client()
 					mtcp_close(mctx, sockid);
 				}
 			} else if (events[i].events & MTCP_EPOLLOUT) {
-				s_len = mtcp_write(mctx, sockid, s_buf, RCVBUF_SIZE);
+				s_len = mtcp_write(mctx, sockid, s_buf, SNDBUF_SIZE);
 #ifdef _DEBUG_
 				printf("lmhtq: write %dB\n", s_len);
 #endif
