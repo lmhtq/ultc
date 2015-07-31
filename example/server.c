@@ -24,8 +24,8 @@
 
 #define MAX_FLOW_NUM  (10000)
 
-#define RCVBUF_SIZE (2*1024)
-#define SNDBUF_SIZE (8*1024)
+#define RCVBUF_SIZE (3*256)
+#define SNDBUF_SIZE (2*256)
 
 #define MAX_EVENTS (MAX_FLOW_NUM * 3)
 
@@ -76,11 +76,7 @@ int server()
 	int s_len;
 	char s_buf[SNDBUF_SIZE+2];
 
-	int core_nums;
-
-	printf("client start...\n");
-	core_nums = GetNumCPUs();
-
+	printf("server init...\n");
 	ret = mtcp_init("server.conf");
 	if (ret) {
 		printf("Failed to initialize mtcp.\n");
@@ -152,7 +148,6 @@ int server()
 
 int client()
 {
-	struct mtcp_conf mcfg;
 	mctx_t mctx;
 	int ep_id;
 	struct mtcp_epoll_event *events;
@@ -222,25 +217,30 @@ int client()
 	}
 
 	while (1) {
+		s_len = mtcp_write(mctx, sockid, s_buf, RCVBUF_SIZE);
+		printf("lmhtq: write %dB\n", s_len);
+	}
+	
+	while (1) {
 		n = mtcp_epoll_wait(mctx, ep_id, events, core, -1);
 		for (i = 0; i < n; i++) {
 			sockid = events[i].data.sockid;
 			if (sockid == listen_id) {
-				c = mtcp_accept(mctx, listen_id, NULL, NULL);
+				/*c = mtcp_accept(mctx, listen_id, NULL, NULL);
 				mtcp_setsock_nonblock(mctx, c);
 				ev.events = MTCP_EPOLLIN | MTCP_EPOLLOUT;
 				ev.data.sockid = c;
-				mtcp_epoll_ctl(mctx, ep_id, MTCP_EPOLL_CTL_ADD, c, &ev);
+				mtcp_epoll_ctl(mctx, ep_id, MTCP_EPOLL_CTL_ADD, c, &ev);*/
 			} else if (events[i].events == MTCP_EPOLLIN) {
 				r_len = mtcp_read(mctx, sockid, r_buf, RCVBUF_SIZE);
-				printf("lmhtq: read %dB\n%s\n", r_len, r_buf);
+				printf("lmhtq: read %dB\n", r_len);
 				if (r_len == 0) {
 					printf("lmhtq: read 0\n");
 					mtcp_close(mctx, sockid);
 				}
 			} else if (events[i].events == MTCP_EPOLLOUT) {
 				s_len = mtcp_write(mctx, sockid, s_buf, RCVBUF_SIZE);
-				printf("lmhtq: write %dB\n");
+				printf("lmhtq: write %dB\n", s_len);
 			}
 		}
 

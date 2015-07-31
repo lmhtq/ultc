@@ -37,6 +37,14 @@ GetEncodedData(uint8_t *src, size_t len, uint32_t unit_num)
 	uint32_t i, j, k, m;
 	uint32_t offset, offset_encoded;
 
+	if (src_fill == NULL) {
+		perror("GetEncodedData: src_fill malloc error\n");
+		exit(-1);
+	}
+	if (data == NULL) {
+		perror("GetEncodedData: dada malloc error\n");
+		exit(-1);
+	}
 	memset(src_fill, 0, sizeof(uint8_t) * REDUNDANCY_SIZE * PKT_SIZE);
 	memcpy(src_fill, src, len);
 
@@ -45,7 +53,6 @@ GetEncodedData(uint8_t *src, size_t len, uint32_t unit_num)
 		src_ptr[i] = src_fill + i * PKT_SIZE;
 	}
 	redundant_ptr = data + i * PKT_SIZE; 
-
 	for (j = 0; j < unit_num; j++) {
 		/* set offset */
 		offset = j * REDUNDANCY_SIZE * PKT_SIZE;
@@ -69,14 +76,14 @@ GetEncodedData(uint8_t *src, size_t len, uint32_t unit_num)
 			offset += PKT_SIZE;
 		}
 	}
+	return data;
 }
 
 uint8_t
 FreeEncodedData(uint8_t *encoded)
 {
-	free(encoded);
-	if (encoded) {
-		perror("FreeEnodedData\n");
+	if (encoded == NULL) {
+		free(encoded);
 	}
 	return 0;
 }
