@@ -22,4 +22,8 @@ GetLostIndex()
 uint8_t*
 GetDecodedData(uint8_*src, size_t len, uint32_t unit_num);
 
+void
+AddToDecodingData(mtcp_manager_t mtcp, tcp_stream *cur_stream,
+		uint32_t cur_ts, uint8_t *payload, uint32_t seq, int payloadlen);
+
 #endif /* __REDUNDANCY_H_ */
