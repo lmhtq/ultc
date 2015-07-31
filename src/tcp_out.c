@@ -400,6 +400,7 @@ FlushTCPSendingBuffer(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_
 				} else {
 					len = buffered_len;
 				}
+				break;
 			case METHOD_DEFAULT:
 				break;
 			default:

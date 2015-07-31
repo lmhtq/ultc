@@ -38,18 +38,18 @@ ifeq ($(DPDK),1)
 LIBS += -m64 -g -O3 -pthread -lrt -march=native -Wl,-export-dynamic ${MTCP_FLD}/lib/libmtcp.a -L../../dpdk/lib -Wl,-lnuma -Wl,-lmtcp -Wl,-lpthread -Wl,-lrt -Wl,-ldl -Wl,--whole-archive -Wl,-lrte_distributor -Wl,-lrte_kni -Wl,-lrte_pipeline -Wl,-lrte_table -Wl,-lrte_port -Wl,-lrte_timer -Wl,-lrte_hash -Wl,-lrte_lpm -Wl,-lrte_power -Wl,-lrte_acl -Wl,-lrte_meter -Wl,-lrte_sched -Wl,-lm -Wl,-lrt -Wl,--start-group -Wl,-lrte_kvargs -Wl,-lrte_mbuf -Wl,-lrte_ip_frag -Wl,-lethdev -Wl,-lrte_malloc -Wl,-lrte_mempool -Wl,-lrte_ring -Wl,-lrte_eal -Wl,-lrte_cmdline -Wl,-lrte_cfgfile -Wl,-lrte_pmd_bond -Wl,-lrte_pmd_vmxnet3_uio -Wl,-lrte_pmd_virtio_uio -Wl,-lrte_pmd_i40e -Wl,-lrte_pmd_ixgbe -Wl,-lrte_pmd_e1000 -Wl,-lrte_pmd_ring -Wl,-lrt -Wl,-lm -Wl,-ldl -Wl,--end-group -Wl,--no-whole-archive
 endif
 
-all: epserver epwget
+all: server client
 
-epserver.o: epserver.c
+server.o: server.c
 	${CC} -c $< ${CFLAGS} ${INC}
 
-epserver: epserver.o
+server: server.o
 	${CC} $< ${LIBS} ${UTIL_OBJ} -o $@
 
-epwget.o: epwget.c
+client.o: client.c
 	${CC} -c $< ${CFLAGS} ${INC}
 
-epwget: epwget.o
+client: client.o
 	${CC} $< ${LIBS} ${UTIL_OBJ} -o $@
 
 clean:

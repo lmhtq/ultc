@@ -1252,7 +1252,7 @@ CopyFromUser(mtcp_manager_t mtcp, tcp_stream *cur_stream, char *buf, int len)
 		case METHOD_REDUNDANCY:
 			encoded_buf = GetEncodedData(buf, sndlen, encoded_unit_num);
 			ret = SBPut(mtcp->rbm_snd, sndvar->sndbuf, encoded_buf, sndlen_redundant);
-			if (ret > sndlen) 
+			if (ret > 0) 
 				ret = sndlen;
 			FreeEncodedData(encoded_buf);
 			break;
