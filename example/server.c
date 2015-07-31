@@ -118,27 +118,42 @@ int server()
 	}
 
 	mtcp_listen(mctx, listen_id, 4096);
+	ev.events = MTCP_EPOLLIN;
+	ev.data.sockid = listen_id;
+	mtcp_epoll_ctl(mctx, ep_id, MTCP_EPOLL_CTL_ADD, listen_id, &ev);
+
+	sockid = mtcp_accept(mctx, listen_id, NULL, NULL);
+	ev.events = MTCP_EPOLLIN;
+	ev.data.sockid = sockid;
+	mtcp_epoll_ctl(mctx, ep_id, MTCP_EPOLL_CTL_ADD, sockid, &ev);
 
 	while (1) {
-		n = mtcp_epoll_wait(mctx, ep_id, events, core, -1);
+		n = mtcp_epoll_wait(mctx, ep_id, events, MAX_EVENTS, -1);
 		for (i = 0; i < n; i++) {
 			sockid = events[i].data.sockid;
 			if (sockid == listen_id) {
 				c = mtcp_accept(mctx, listen_id, NULL, NULL);
 				mtcp_setsock_nonblock(mctx, c);
-				ev.events = MTCP_EPOLLIN | MTCP_EPOLLOUT;
+				ev.events = MTCP_EPOLLIN;
 				ev.data.sockid = c;
 				mtcp_epoll_ctl(mctx, ep_id, MTCP_EPOLL_CTL_ADD, c, &ev);
-			} else if (events[i].events == MTCP_EPOLLIN) {
+			}
+			else if (events[i].events & MTCP_EPOLLIN) {
 				r_len = mtcp_read(mctx, sockid, r_buf, RCVBUF_SIZE);
 				printf("lmhtq: read %dB\n%s\n", r_len, r_buf);
+				ev.events = MTCP_EPOLLOUT;
+				ev.data.sockid = sockid;
+				mtcp_epoll_ctl(mctx, ep_id, MTCP_EPOLL_CTL_MOD, sockid, &ev);
 				if (r_len == 0) {
 				 	printf("lmhtq: read 0\n");
 					mtcp_close(mctx, sockid);
 				} 
-			} else if (events[i].events == MTCP_EPOLLOUT) {
+			} else if (events[i].events & MTCP_EPOLLOUT) {
 				s_len = mtcp_write(mctx, sockid, s_buf, RCVBUF_SIZE);
-				printf("lmhtq: write %dB\n");
+				printf("lmhtq: write %dB\n", s_len);
+				ev.events = MTCP_EPOLLIN;
+				ev.data.sockid = sockid;
+				mtcp_epoll_ctl(mctx, ep_id, MTCP_EPOLL_CTL_MOD, sockid, &ev);
 			}
 		}
 
