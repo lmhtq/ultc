@@ -53,7 +53,7 @@ GetEncodedData(uint8_t *src, size_t len, uint32_t unit_num)
 		src_ptr[i] = src_fill + i * PKT_SIZE;
 	}
 	redundant_ptr = data + i * PKT_SIZE; 
-	for (j = 0; j < unit_num; j++) {
+	for (j = 0; j < cnt; j++) {
 		/* set offset */
 		offset = j * REDUNDANCY_SIZE * PKT_SIZE;
 		offset_encoded = j * (REDUNDANCY_SIZE + 1) * PKT_SIZE;
@@ -62,8 +62,8 @@ GetEncodedData(uint8_t *src, size_t len, uint32_t unit_num)
 		memcpy(data + offset_encoded, src_fill + offset,
 				REDUNDANCY_SIZE * PKT_SIZE);
 		
-		/* copy src_fill[0] to data[0,1,2,3] */
-		offset_encoded += PKT_SIZE;
+		/* copy src_fill[0] to data[3] */
+		offset_encoded += 3 * PKT_SIZE;
 		memcpy(data + offset_encoded, src_fill + offset, PKT_SIZE);
 		
 		/* compute redundancy */

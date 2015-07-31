@@ -1228,8 +1228,10 @@ CopyFromUser(mtcp_manager_t mtcp, tcp_stream *cur_stream, char *buf, int len)
 	int sndlen_redundant;
 
 	sndlen = MIN((int)sndvar->snd_wnd, len);
+printf("sndvar->snd_wnd:%d, len: %d\n", (int)sndvar->snd_wnd, len);	
 	if (sndlen <= 0) {
 		errno = EAGAIN;
+printf("sndlen<=0\n");	exit(-1);
 		return -1;
 	}
 
@@ -1240,9 +1242,11 @@ CopyFromUser(mtcp_manager_t mtcp, tcp_stream *cur_stream, char *buf, int len)
 			cur_stream->close_reason = TCP_NO_MEM;
 			/* notification may not required due to -1 return */
 			errno = ENOMEM;
+printf("no mem\n");	
 			return -1;
 		}
 	}
+printf("aa\n");	
 
 	/* lmhtq: for redundant coded stream */
 	switch (cur_stream->stream_method) {
@@ -1250,12 +1254,16 @@ CopyFromUser(mtcp_manager_t mtcp, tcp_stream *cur_stream, char *buf, int len)
 			encoded_unit_num = GetEncodedUnitNum(sndlen);
 			encoded_len = encoded_unit_num / REDUNDANCY_SIZE * (REDUNDANCY_SIZE + 1) * PKT_SIZE; 
 			sndlen_redundant = MIN((int)sndvar->snd_wnd, encoded_len);
+			printf("bb\n");
 			encoded_buf = GetEncodedData(buf, sndlen, encoded_unit_num);
+			printf("cc\n");
 			ret = SBPut(mtcp->rbm_snd, sndvar->sndbuf, encoded_buf, sndlen_redundant);
+			printf("dd\n");
 			if (ret > 0) {
 				ret = sndlen;
 			}
 			FreeEncodedData(encoded_buf);
+			printf("ee\n");
 			break;
 		case METHOD_DEFAULT:
 			ret = SBPut(mtcp->rbm_snd, sndvar->sndbuf, buf, sndlen);
@@ -1265,7 +1273,7 @@ CopyFromUser(mtcp_manager_t mtcp, tcp_stream *cur_stream, char *buf, int len)
 			break;
 	}
 	/*ret = SBPut(mtcp->rbm_snd, sndvar->sndbuf, buf, sndlen);*/
-	
+printf("ff\n");	
 	assert(ret == sndlen);
 	sndvar->snd_wnd = sndvar->sndbuf->size - sndvar->sndbuf->len;
 	if (ret <= 0) {
@@ -1275,6 +1283,7 @@ CopyFromUser(mtcp_manager_t mtcp, tcp_stream *cur_stream, char *buf, int len)
 		return -1;
 	}
 	
+printf("gg\n");	
 	if (sndvar->snd_wnd <= 0) {
 		TRACE_SNDBUF("%u Sending buffer became full!! snd_wnd: %u\n", 
 				cur_stream->id, sndvar->snd_wnd);
@@ -1360,6 +1369,7 @@ mtcp_write(mctx_t mctx, int sockid, char *buf, int len)
 
 	SBUF_UNLOCK(&sndvar->write_lock);
 
+printf("00\n");	
 	if (ret > 0 && !(sndvar->on_sendq || sndvar->on_send_list)) {
 		SQ_LOCK(&mtcp->ctx->sendq_lock);
 		sndvar->on_sendq = TRUE;
@@ -1373,6 +1383,7 @@ mtcp_write(mctx_t mctx, int sockid, char *buf, int len)
 		errno = EAGAIN;
 	}
 
+printf("01\n");	
 	/* if there are remaining sending buffer, generate write event */
 	if (sndvar->snd_wnd > 0) {
 		if (socket->epoll & MTCP_EPOLLOUT && !(socket->epoll & MTCP_EPOLLET)) {
@@ -1390,6 +1401,7 @@ mtcp_write(mctx_t mctx, int sockid, char *buf, int len)
 		}
 	}
 
+printf("02\n");	
 	TRACE_API("Stream %d: mtcp_write() returning %d\n", cur_stream->id, ret);
 	return ret;
 }
