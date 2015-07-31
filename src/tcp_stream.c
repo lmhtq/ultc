@@ -232,8 +232,7 @@ CreateTCPStream(mtcp_manager_t mtcp, socket_map_t socket, int type,
 	stream->dport = dport;
 	
 	/* lmhtq: set the stream's method, METHOD_REDUNDANCY or METHOD_DEFAULT... */
-	stream->stream_method = METHOD_REDUNDANCY;
-	
+	stream->stream_method = METHOD_REDUNDANCY;	
 	
 	ret = HTInsert(mtcp->tcp_flow_table, stream);
 	if (ret < 0) {
