@@ -73,11 +73,11 @@ int server()
 	struct mtcp_epoll_event ev;
 	struct sockaddr_in saddr;
 	int c;	
-	int i, n;
+	int i, j, n;
 	int r_len;
-	char r_buf[RCVBUF_SIZE];
+	char r_buf[RCVBUF_SIZE + 2];
 	int s_len;
-	char s_buf[SNDBUF_SIZE+2];
+	char s_buf[SNDBUF_SIZE + 2];
 
 	printf("server init...\n");
 	ret = mtcp_init("server.conf");
@@ -142,12 +142,18 @@ int server()
 				mtcp_epoll_ctl(mctx, ep_id, MTCP_EPOLL_CTL_ADD, c, &ev);
 			}
 			else if (events[i].events & MTCP_EPOLLIN) {
-				memset(r_buf, 0, RCVBUF_SIZE);
+				memset(r_buf, 0, RCVBUF_SIZE + 2);
 				r_len = mtcp_read(mctx, sockid, r_buf, RCVBUF_SIZE);
 #ifdef _DEBUG_
-				printf("lmhtq: read %dB\n%s\n", r_len, r_buf);
+				printf("lmhtq: read %dB\n", r_len);
+				for (j = 0; j < n; j++) {
+					printf("%c", r_buf[j]);
+					if (j % 256 == 255) {
+						printf("\n");
+					}
+				}
 #endif
-				ev.events = MTCP_EPOLLOUT;
+				ev.events = MTCP_EPOLLIN;
 				ev.data.sockid = sockid;
 				mtcp_epoll_ctl(mctx, ep_id, MTCP_EPOLL_CTL_MOD, sockid, &ev);
 				if (r_len == 0) {
@@ -179,7 +185,7 @@ int client()
 	struct mtcp_epoll_event ev;
 	struct sockaddr_in addr;
 	int c;	
-	int i, n;
+	int i, j, n;
 	int r_len;
 	char r_buf[RCVBUF_SIZE];
 	int s_len;
@@ -251,6 +257,12 @@ int client()
 				r_len = mtcp_read(mctx, sockid, r_buf, RCVBUF_SIZE);
 #ifdef _DEBUG_
 				printf("lmhtq: read %dB\n", r_len);
+				for (j = 0; j < n; j++) {
+					printf("%c", r_buf[j]);
+					if (j % 256 == 255) {
+						printf("\n");
+					}
+				}
 #endif
 				ev.events = MTCP_EPOLLOUT;
 				ev.data.sockid = sockid;
@@ -264,7 +276,7 @@ int client()
 #ifdef _DEBUG_
 				printf("lmhtq: write %dB\n", s_len);
 #endif
-				ev.events = MTCP_EPOLLIN;
+				ev.events = MTCP_EPOLLOUT;
 				ev.data.sockid = sockid;
 				mtcp_epoll_ctl(mctx, ep_id, MTCP_EPOLL_CTL_MOD, sockid, &ev);
 			}
