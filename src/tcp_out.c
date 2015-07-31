@@ -385,23 +385,27 @@ FlushTCPSendingBuffer(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_
 		data = sndvar->sndbuf->head + 
 				(seq - sndvar->sndbuf->head_seq);
 
-		/* lmhtq: used for redundant stream */
-		switch (cur_stream->stream_method)
-		{
-			case STREAM_REDUNDANCY:
-				maxlen = PKT_SIZE;
-			case STREAM_DEFAULT:
-				break;
-			default:
-				break;
-		}
-
 		if (buffered_len > maxlen) {
 			len = maxlen;
 		} else {
 			len = buffered_len;
 		}
 		
+		/* lmhtq: used for redundant stream */
+		switch (cur_stream->stream_method)
+		{
+			case METHOD_REDUNDANCY:
+				if (buffered_len > PKT_SIZE) {
+					len = PKT_SIZE;
+				} else {
+					len = buffered_len;
+				}
+			case METHOD_DEFAULT:
+				break;
+			default:
+				break;
+		}
+
 		if (len <= 0)
 			break;
 

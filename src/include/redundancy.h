@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "mtcp.h"
+#include "tcp_stream.h"
+
 #define PKT_SIZE 256
 #define REDUNDANCY_SIZE 3
 /***********************************************************************/
@@ -16,11 +19,8 @@ GetEncodedData(uint8_t *src, size_t len, uint32_t unit_num);
 uint8_t
 FreeEncodedData(uint8_t *encoded);
 
-uint8_t
-GetLostIndex()
-
 uint8_t*
-GetDecodedData(uint8_*src, size_t len, uint32_t unit_num);
+GetDecodedData(uint8_t *src, size_t len, uint32_t unit_num);
 
 void
 AddToDecodingData(mtcp_manager_t mtcp, tcp_stream *cur_stream,

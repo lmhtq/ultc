@@ -17,7 +17,7 @@
 #include "rss.h"
 #include "config.h"
 #include "debug.h"
-#include "redundancy.h" /* lmhtq: for redundant stream*/
+#include "redundancy.h" /* lmhtq: for redundant stream */
 
 #define MAX(a, b) ((a)>(b)?(a):(b))
 #define MIN(a, b) ((a)<(b)?(a):(b))
