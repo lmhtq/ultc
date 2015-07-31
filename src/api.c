@@ -1250,6 +1250,8 @@ CopyFromUser(mtcp_manager_t mtcp, tcp_stream *cur_stream, char *buf, int len)
 			encoded_len = encoded_unit_num / REDUNDANCY_SIZE * (REDUNDANCY_SIZE + 1) * PKT_SIZE; 
 			encoded_buf = GetEncodedData(buf, sndlen, encoded_unit_num);
 			ret = SBPut(mtcp->rbm_snd, sndvar->sndbuf, encoded_buf, encoded_len);
+			if (ret > 0) 
+				ret = sndlen;
 			FreeEncodedData(encoded_buf);
 			break;
 		case METHOD_DEFAULT:
