@@ -843,7 +843,7 @@ Handle_TCP_ST_ESTABLISHED (mtcp_manager_t mtcp, uint32_t cur_ts,
 		TRACE_DBG("Stream %d (TCP_ST_ESTABLISHED): weird SYN. "
 				"seq: %u, expected: %u, ack_seq: %u, expected: %u\n", 
 				cur_stream->id, seq, cur_stream->rcv_nxt, 
-				ack_seq, cur_strea m->snd_nxt);
+				ack_seq, cur_stream->snd_nxt);
 		cur_stream->snd_nxt = ack_seq;
 		AddtoControlList(mtcp, cur_stream, cur_ts);
 		return;
