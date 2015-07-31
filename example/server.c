@@ -146,7 +146,7 @@ int server()
 				r_len = mtcp_read(mctx, sockid, r_buf, RCVBUF_SIZE);
 #ifdef _DEBUG_
 				printf("lmhtq: read %dB\n", r_len);
-				for (j = 0; j < n; j++) {
+				for (j = 0; j < 1024; j++) {
 					printf("%c", r_buf[j]);
 					if (j % 256 == 255) {
 						printf("\n");
