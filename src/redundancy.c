@@ -63,7 +63,7 @@ GetEncodedData(uint8_t *src, size_t len, uint32_t unit_num)
 		offset += PKT_SIZE;
 		for (k = 1; k < REDUNDANCY_SIZE; k++) {
 			for (m = 0; m < PKT_SIZE; m++) {
-				*(data rrrrirr+ offset_encoded + m) ^= 
+				*(data + offset_encoded + m) ^= 
 					*(src_fill + offset + m);
 			}
 			offset += PKT_SIZE;
@@ -93,7 +93,6 @@ AddToDecodingData(mtcp_manager_t mtcp, tcp_stream *cur_stream,
 	uint32_t index;
 	uint32_t i,j,k, num, num_nxt;
 	uint32_t offset;
-	uint8_t *
 
 	if (payloadlen != PKT_SIZE || 
 			(seq - rcvvar->rcvbuf->init_seq) % PKT_SIZE != 0 ) {
